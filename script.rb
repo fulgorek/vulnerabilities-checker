@@ -54,8 +54,8 @@ module Vuln
       YEARS.sort.each {|year| bootstrap(year)}
       bootstrap('recent') if INCLUDE_RECENT == true
       prepare_items
-      lock_database
       send_email
+      lock_database
     end
 
     private
@@ -124,12 +124,7 @@ module Vuln
       save_database(serialize_vulnerabilities) if items.any?
     end
 
-    def reset_database
-      ::File.delete(DATABASE) if ::File.file?("#{DATABASE}")
-    end
-
     def save_database(items)
-      return if SEND_EMAIL == false
       ::File.open("#{DATABASE}", 'w') {|f| f.write(::Marshal.dump(items))}
     end
 
@@ -164,8 +159,8 @@ module Vuln
 
     def build_message
       message = <<MESSAGE_END
-From: Private Person <#{SMTP[:from]}>
-To: A Test User <#{SMTP[:to]}>
+From: Vuln Robot <#{SMTP[:from]}>
+To: Receipt <#{SMTP[:to]}>
 Subject: New vulnerabilities found!
 
 #{build_message_items}
@@ -193,8 +188,6 @@ MESSAGE_END
         end
       rescue Net::SMTPAuthenticationError, Net::SMTPServerBusy, Net::SMTPSyntaxError, Net::SMTPFatalError, Net::SMTPUnknownError => e
         puts 'Invalid Email credentials...'
-        # Ugly hack, is prefered to save and send only if email credentials are valid. :S
-        reset_database
       end
         puts "Email Sent with #{items.size} vulnerabilities found!"
     end
